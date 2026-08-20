@@ -1,28 +1,25 @@
-from jose import jwt,JWTError
+from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Depends
-from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
-from configAuth import SECRET_KEY, ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from configAuth import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from database import get_db  # ← Usa get_db() para obtener la conexión
 import sqlite3
-import os
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "database_tarea.db")
 
 security = HTTPBearer()
 
-def crear_token(data:dict):
+def crear_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def verificar_token(token:str):
+def verificar_token(token: str):
     try:
-        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except JWTError:
-        raise HTTPException(status_code= 401,detail= "token ivalido o expirado")
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -34,9 +31,9 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     if not usuario_id:
         raise HTTPException(status_code=401, detail="Token inválido")
     
-    # Verificar que el usuario existe en la base de datos
-    conexion = sqlite3.connect(DB_PATH)
-    cursor = conexion.cursor()
+    # ✅ Usar get_db() para obtener la conexión a la base de datos
+    # que conftest.py ha configurado correctamente
+    conexion, cursor = get_db()
     cursor.execute("SELECT id, nombre FROM usuarios WHERE id = ?", (int(usuario_id),))
     usuario = cursor.fetchone()
     conexion.close()

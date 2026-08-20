@@ -4,7 +4,7 @@ from typing import Optional
 class UsuarioRegister(BaseModel):
     nombre:str = Field(...,min_length=3 , max_length=300, description="nombre Usuario")
     email : str = Field(...,pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$")
-    password: str = Field(..., min_length=8, pattern=r"^[a-zA-Z0-9!@#$%^&*]+$")
+    password: str = Field(..., min_length=8)
 
 class UsuarioLogin(BaseModel):
     email : str = Field(...,pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$")
