@@ -1,0 +1,41 @@
+name: Pruebas con Base de Datos
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      sqlite:
+        image: sqlite:latest
+        options: --name sqlite
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      
+      - name: Configurar variable de entorno para pruebas
+        run: |
+          echo "TEST_DB_PATH=:memory:" >> $GITHUB_ENV
+      
+      - name: Ejecutar pruebas con base de datos en memoria
+        run: |
+          pytest -v --tb=short
+      
+      - name: Ejecutar pruebas de integración
+        run: |
+          pytest tests/test_integracion.py -v
